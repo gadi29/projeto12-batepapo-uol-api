@@ -9,6 +9,7 @@ app.use(json());
 app.use(cors());
 dotenv.config();
 const port = 5000;
+const FIVE_SEG = 5000;
 
 const mongoClient = new MongoClient(process.env.MONGO_URI);
 let db;
@@ -137,6 +138,17 @@ app.post('/status', async (req, res) => {
     res.sendStatus(500);
   }
 })
+
+setInterval(async () => {
+  const participants = await db.collection('participants').find().toArray();
+
+  const excludeParticipants = participants.filter(participant => participant.lastStatus < (Date.now() - (FIVE_SEG * 2)));
+
+  excludeParticipants.map(async (participant) => {
+    await db.collection('participants').deleteOne({ name: participant.name });
+    await db.collection('messages').insertOne({ from: participant.name, to: 'Todos', text:'sai da sala...', type: 'status', time: 'HH:MM:SS' })
+  });
+}, FIVE_SEG * 3)
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
