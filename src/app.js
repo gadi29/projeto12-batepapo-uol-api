@@ -120,6 +120,24 @@ app.post('/messages', async (req, res) => {
   }
 });
 
+app.post('/status', async (req, res) => {
+  const user = req.headers.user;
+
+  try {
+    const userLogged = await db.collection('participants').findOne({ name: user });
+    
+    if (!userLogged) {
+      return res.sendStatus(404);
+    }
+
+    await db.collection('participants').updateOne({ name: user }, {$set: { lastStatus : Date.now() }});
+    res.sendStatus(200);
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+})
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
