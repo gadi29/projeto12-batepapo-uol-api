@@ -3,11 +3,13 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { MongoClient } from 'mongodb';
 import joi from 'joi';
+import dayjs from 'dayjs';
 
 const app = express();
 app.use(json());
 app.use(cors());
 dotenv.config();
+
 const port = 5000;
 const FIVE_SEG = 5000;
 
@@ -53,6 +55,7 @@ app.post('/participants', async (req, res) => {
 
   try {
     await db.collection('participants').insertOne({ ...newParticipant, lastStatus: Date.now() });
+    await db.collection('messages').insertOne({ from: newParticipant.name, to: 'Todos', text: 'entra na sala...', type: 'status', time: dayjs().format('HH:mm:ss') });
     res.sendStatus(201);
   } catch (error) {
     console.error(error)
@@ -67,7 +70,7 @@ app.get('/messages', async (req, res) => {
   const user = req.headers.user;
 
   const userMessages = allMessages.filter(message => {
-    if (message.type === "message") return true;
+    if (message.type === "message" || message.type === "status") return true;
     else {
       if (message.to === user) return true;
       else if (message.from === user) return true;
@@ -111,9 +114,7 @@ app.post('/messages', async (req, res) => {
   }
 
   try {
-    const now = "10:00";
-
-    await db.collection('messages').insertOne({ ...message, time: now })
+    await db.collection('messages').insertOne({ ...message, time: dayjs().format('HH:mm:ss') });
     res.sendStatus(201);
   } catch (error) {
     console.error(error);
@@ -146,7 +147,7 @@ setInterval(async () => {
 
   excludeParticipants.map(async (participant) => {
     await db.collection('participants').deleteOne({ name: participant.name });
-    await db.collection('messages').insertOne({ from: participant.name, to: 'Todos', text:'sai da sala...', type: 'status', time: 'HH:MM:SS' })
+    await db.collection('messages').insertOne({ from: participant.name, to: 'Todos', text:'sai da sala...', type: 'status', time: dayjs().format('HH:mm:ss') })
   });
 }, FIVE_SEG * 3)
 
