@@ -59,6 +59,36 @@ app.post('/participants', async (req, res) => {
   }
 });
 
+app.get('/messages', async (req, res) => {
+  let limit = parseInt(req.query.limit);
+  if (!limit) limit = 100;
+  const allMessages = await db.collection('messages').find().toArray();
+  const user = req.headers.user;
+
+  const userMessages = allMessages.filter(message => {
+    if (message.type === "message") return true;
+    else {
+      if (message.to === user) return true;
+      else if (message.from === user) return true;
+      else return false;
+    }
+  })
+
+  try {
+    if (userMessages.length > limit) {
+      const showMessages = userMessages.split(-limit);
+      res.send(showMessages);
+    } else {
+      const showMessages = [...userMessages];
+      res.send(showMessages);
+    }
+    
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
+
 app.post('/messages', async (req, res) => {
   const newMessage = req.body;
 
