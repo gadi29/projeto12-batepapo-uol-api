@@ -21,6 +21,16 @@ const participantSchema = joi.object({
   name: joi.string().required()
 })
 
+app.get('/participants', async (req, res) => {
+  try {
+    const participants = await db.collection('participants').find().toArray();
+    res.send(participants);
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+})
+
 app.post('/participants', async (req, res) => {
   const newParticipant = req.body;
 
@@ -39,7 +49,7 @@ app.post('/participants', async (req, res) => {
     await db.collection('participants').insertOne({ ...newParticipant, lastStatus: Date.now() });
     res.sendStatus(201);
   } catch (error) {
-    console.log(error)
+    console.error(error)
     res.sendStatus(500);
   }
 })
