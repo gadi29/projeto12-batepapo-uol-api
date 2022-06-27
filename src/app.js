@@ -72,7 +72,7 @@ app.get('/messages', async (req, res) => {
   const userMessages = allMessages.filter(message => {
     if (message.type === "message" || message.type === "status") return true;
     else {
-      if (message.to === user) return true;
+      if (message.to === user || message.to === "Todos") return true;
       else if (message.from === user) return true;
       else return false;
     }
